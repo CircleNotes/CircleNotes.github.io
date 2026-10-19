@@ -1,6 +1,6 @@
 # PlayableGraph 动画示例
 
-配套文章：[用 PlayableGraph 拆解大型动画状态机](https://circle7991.github.io/posts/unity-playablegraph-modular-animator-controllers/)。示例仅依赖 Unity 自带 API，使用通用命名，不包含项目资源、内部路径或业务系统。
+配套文章：[用 PlayableGraph 拆解大型动画状态机](https://circlenotes.github.io/posts/unity-playablegraph-modular-animator-controllers/)。示例仅依赖 Unity 自带 API，使用通用命名，不包含项目资源、内部路径或业务系统。
 
 ## 示例目标与结构
 

@@ -7,7 +7,7 @@ author: Circle
 language: zh-CN
 timezone: Asia/Shanghai
 # GitHub Pages 用户站点地址。
-url: https://circle7991.github.io
+url: https://circlenotes.github.io
 root: /
 permalink: posts/:title/
 pretty_urls:

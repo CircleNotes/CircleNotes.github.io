@@ -2,7 +2,7 @@
 
 使用 Hexo + Fluid 构建，通过 GitHub Actions 发布到 GitHub Pages。
 
-网站地址：<https://circle7991.github.io/>
+网站地址：<https://circlenotes.github.io/>
 
 ## 本地预览
 
