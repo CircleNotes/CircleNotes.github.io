@@ -41,6 +41,10 @@ tags:
 - `source/about/index.md`：关于页面。
 - `.github/workflows/pages.yml`：自动发布。
 
+## 配套示例
+
+- [PlayableGraph 动画图与降频驱动](examples/unity-animation/)：独立的 Unity C# 脚本及接入说明。
+
 ## 字数与阅读时长
 
 全站统一统计正文中的汉字和英文/数字词组：一个汉字计一字，一个英文或数字词组计一词。保留行内技术标识符，排除代码块、文本示意图、代码行号、HTML 标签与标点，显示为精确的“字词”数量。

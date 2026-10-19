@@ -16,7 +16,11 @@ excerpt: 对比传统 Animator Controller 与 PlayableGraph 的职责和取舍�
 
 一种处理方式是把控制器按动作域拆成较小的模块，由运行时代码按需加载，再用 PlayableGraph 统一装配、混合和输出。这个目标并不要求抛弃 Animator Controller：小型状态机可以继续负责动作域内部的状态与过渡，代码负责模块之间的组合和调度。
 
-本文以 Unity **6.3** 的 Playables API 为背景，先比较两种组织方式，再说明控制器按需装配、参数写入、手动更新和距离分级的实现。示例用于表达关键接口与算法，资源系统和生命周期应按实际工程补齐。
+本文以 Unity **6.3** 的 Playables API 为背景，先比较两种组织方式，再说明控制器按需装配、参数写入、手动更新和距离分级的实现。文中代码片段用于表达关键接口与算法，配套示例提供完整的建图与组件驱动；资源加载和角色距离分级由使用方接入。
+
+**配套源码：** [AnimGraph.cs：动画图与混合](https://github.com/Circle7991/Circle7991.github.io/blob/main/examples/unity-animation/AnimGraph.cs) · [AnimGraphDriver.cs：按目标频率驱动](https://github.com/Circle7991/Circle7991.github.io/blob/main/examples/unity-animation/AnimGraphDriver.cs) · [使用说明](https://github.com/Circle7991/Circle7991.github.io/tree/main/examples/unity-animation)
+
+将两份脚本复制到 Unity，在带有 Animator 的角色上添加 `AnimGraphDriver`，给驱动组件指定 Controller 资源即可观察：更新频率设为 `0` 时逐帧求值，`15` 时目标每游戏秒15次，`1` 时可清楚看到逐格输出。示例使用通用名称，仅依赖 Unity API，不包含模型、动画资源或资源加载框架。
 
 ## 1. 为什么要拆解大型状态机
 
@@ -299,6 +303,8 @@ _animGraph = new AnimGraph(animator, _initialController);
 特殊动作和控制器替换是两种能力：前者混合一个独立 Clip，后者切换当前动作域的状态机。它们可以共用输出结构，但各自的切换和释放规则应独立设计。
 
 ## 10. 手动求值：降频，同时保留正确的播放时间
+
+以下调度逻辑的完整组件见 [AnimGraphDriver.cs](https://github.com/Circle7991/Circle7991.github.io/blob/main/examples/unity-animation/AnimGraphDriver.cs)。它在启用时建图、禁用时释放，重新启用会从 Controller 的初始状态开始播放。
 
 动画更新频率约定为每个游戏秒内的目标求值次数：
 
