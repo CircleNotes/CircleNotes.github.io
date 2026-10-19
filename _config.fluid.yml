@@ -30,6 +30,13 @@ post:
     date:
       enable: true
       format: YYYY-MM-DD
+    # 统计规则由 scripts/reading-stats.js 统一处理，替代主题默认的字符计数与阅读速度。
+    wordcount:
+      enable: true
+      format: '{} 字词'
+    min2read:
+      enable: true
+      format: '约 {} 分钟'
   toc:
     enable: true
     placement: right

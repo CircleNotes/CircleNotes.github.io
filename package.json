@@ -4,6 +4,7 @@
   "private": true,
   "description": "Circle 的技术博客",
   "scripts": {
+    "test": "node --test",
     "build": "hexo generate",
     "clean": "hexo clean",
     "server": "hexo server",
