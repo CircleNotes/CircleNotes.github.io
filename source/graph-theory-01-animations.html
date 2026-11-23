@@ -303,6 +303,17 @@ layout: false
     nextButton.addEventListener('click', () => step(1));
 
     render();
+
+    const frame = window.frameElement;
+    if (frame) {
+      const fitFrameToContent = () => {
+        const height = Math.ceil(document.body.getBoundingClientRect().height);
+        const fittedHeight = height + 'px';
+        if (frame.style.height !== fittedHeight) frame.style.height = fittedHeight;
+      };
+      new ResizeObserver(fitFrameToContent).observe(document.body);
+      fitFrameToContent();
+    }
   })();
 </script>
 </body>
