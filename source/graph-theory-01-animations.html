@@ -1,0 +1,309 @@
+---
+layout: false
+---
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>水格距离动画</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --font-size-base: 16px;
+    --background: #fbfcfe;
+    --foreground: #162132;
+    --muted: #edf1f6;
+    --muted-foreground: #495769;
+    --blue: #278bf0;
+    --green: #15a276;
+    --border: #bcc9d8;
+    --primary: #215caa;
+    --primary-foreground: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #131c28;
+      --foreground: #e8eff8;
+      --muted: #243142;
+      --muted-foreground: #b9c8da;
+      --blue: #59a7ff;
+      --green: #5accad;
+      --border: #52657d;
+      --primary: #accdff;
+      --primary-foreground: #10223a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 1rem;
+    background: var(--background);
+    color: var(--foreground);
+    font: 16px/1.5 system-ui, -apple-system, sans-serif;
+  }
+  h2, h3, p { margin: 0; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 1rem; }
+  .viz-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  .text-small { font-size: .85rem; }
+  .text-muted { color: var(--muted-foreground); }
+  .btn {
+    padding: .4rem .67rem;
+    border: 1px solid var(--border);
+    border-radius: .4rem;
+    background: var(--background);
+    color: var(--foreground);
+    font: inherit;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .btn:disabled { opacity: .48; cursor: default; }
+</style>
+</head>
+<body>
+<section id="bfs-water-distance-animation" class="water-distance" aria-label="BFS 水格距离动画">
+  <h2>广度优先 BFS</h2>
+  <div class="viz-controls">
+    <button class="btn btn-primary" type="button" data-play>播放</button>
+    <button class="btn" type="button" data-previous disabled>上一步</button>
+    <button class="btn" type="button" data-next>下一步</button>
+    <span class="tabular-nums" data-count></span>
+  </div>
+  <div class="water-layout">
+    <table class="water-grid tabular-nums" aria-label="距离矩阵，行列从 0 开始">
+      <thead>
+        <tr><td></td><th scope="col">0</th><th scope="col">1</th><th scope="col">2</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">0</th><td data-cell>−1</td><td data-cell>−1</td><td data-cell data-water>−1</td></tr>
+        <tr><th scope="row">1</th><td data-cell data-water>−1</td><td data-cell>−1</td><td data-cell>−1</td></tr>
+        <tr><th scope="row">2</th><td data-cell>−1</td><td data-cell>−1</td><td data-cell>−1</td></tr>
+      </tbody>
+    </table>
+    <div class="water-pending">
+      <h3 data-pending-title>队列</h3>
+      <p class="text-small text-muted" data-ends></p>
+      <ol class="water-items tabular-nums" data-items aria-label="待处理格子的坐标"></ol>
+      <span data-empty>空</span>
+    </div>
+  </div>
+  <p class="water-event" aria-live="polite" data-event>等待初始化水格。</p>
+  <p class="text-small text-muted">蓝底为水格，描边为当前处理格，括号标出本步填值，−1 表示待计算。</p>
+</section>
+
+<style>
+  .water-distance {
+    display: grid;
+    gap: calc(var(--font-size-base) * 0.65);
+  }
+  .water-distance .water-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--font-size-base);
+  }
+  .water-distance .water-grid {
+    width: 100%;
+    max-width: 13rem;
+    border-spacing: calc(var(--font-size-base) * 0.25);
+    text-align: center;
+    table-layout: fixed;
+  }
+  .water-distance .water-grid thead td {
+    width: 1rem;
+  }
+  .water-distance .water-grid th {
+    color: var(--muted-foreground);
+    font-weight: 400;
+  }
+  .water-distance .water-grid [data-cell] {
+    height: calc(var(--font-size-base) * 2.6);
+    background-color: var(--muted);
+    color: var(--foreground);
+    transition: background-color 180ms ease;
+  }
+  .water-distance .water-grid [data-water] {
+    background-color: color-mix(in srgb, var(--blue) 22%, var(--background));
+  }
+  .water-distance .water-grid [data-changed]:not([data-water]) {
+    background-color: color-mix(in srgb, var(--green) 23%, var(--background));
+  }
+  .water-distance .water-grid [data-current] {
+    outline: 2px solid var(--foreground);
+    outline-offset: -2px;
+  }
+  .water-distance .water-pending {
+    display: grid;
+    gap: calc(var(--font-size-base) * 0.4);
+  }
+  .water-distance .water-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--font-size-base) * 0.35);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .water-distance .water-items li {
+    color: var(--foreground);
+    background-color: var(--muted);
+    padding: calc(var(--font-size-base) * 0.2) calc(var(--font-size-base) * 0.45);
+    white-space: nowrap;
+  }
+  .water-distance .water-items [data-entry-added] {
+    background-color: color-mix(in srgb, var(--green) 23%, var(--background));
+  }
+  .water-distance .water-event {
+    min-height: calc(var(--font-size-base) * 2.8);
+  }
+  @media (max-width: 470px) {
+    .water-distance .water-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .water-distance .water-grid [data-cell] {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById('bfs-water-distance-animation');
+    const mode = new URLSearchParams(window.location.search).get('mode') === 'dfs' ? 'dfs' : 'bfs';
+    const stackMode = mode === 'dfs';
+    const title = stackMode ? '深度优先 DFS' : '广度优先 BFS';
+    root.querySelector('h2').textContent = title;
+    root.setAttribute('aria-label', title + '水格距离动画');
+    document.title = title + ' · 水格距离动画';
+    const words = stackMode
+      ? { collection: '栈', push: '入栈', pop: '出栈', ends: '左侧是栈底，右侧是栈顶。右侧进出。' }
+      : { collection: '队列', push: '入队', pop: '出队', ends: '左侧是队首，右侧是队尾。左出右进。' };
+
+    const input = [[0, 0, 1], [1, 0, 0], [0, 0, 0]];
+    const width = input[0].length;
+    const rowOf = index => Math.floor(index / width);
+    const colOf = index => index % width;
+    const coordinate = index => `(${rowOf(index)}, ${colOf(index)})`;
+    const number = distance => distance === -1 ? '−1' : String(distance);
+    const directions = [[0, 1, '右'], [0, -1, '左'], [1, 0, '下'], [-1, 0, '上']];
+    const tiles = input.flat();
+    const distances = tiles.map(() => -1);
+    const pending = [];
+    const frames = [];
+
+    function capture(message, current = null, changed = null) {
+      frames.push({ message, current, changed, distances: [...distances], pending: [...pending] });
+    }
+
+    capture('等待初始化水格。');
+    for (let index = 0; index < tiles.length; index++) {
+      if (tiles[index] !== 1) continue;
+
+      distances[index] = 0;
+      pending.push(index);
+      capture(`水格 ${coordinate(index)} 填 0，${words.push}。`, null, index);
+    }
+
+    while (pending.length > 0) {
+      const current = stackMode ? pending.pop() : pending.shift();
+      const distance = distances[current];
+      capture(`${coordinate(current)} ${words.pop}，当前距离为 ${distance}。`, current);
+
+      for (const [dr, dc, direction] of directions) {
+        const row = rowOf(current) + dr;
+        const col = colOf(current) + dc;
+        if (row < 0 || row >= input.length || col < 0 || col >= width) continue;
+
+        const next = row * width + col;
+        const oldDistance = distances[next];
+        const newDistance = distance + 1;
+        if (oldDistance !== -1 && (!stackMode || newDistance >= oldDistance)) continue;
+
+        distances[next] = newDistance;
+        pending.push(next);
+        const action = oldDistance === -1 ? '填值' : '找到更短距离';
+        capture(`从 ${coordinate(current)} 向${direction}到 ${coordinate(next)}，${action} ${number(oldDistance)} → ${newDistance}，${words.push}。`, current, next);
+      }
+    }
+    capture(`${words.collection}为空，计算完成。`);
+
+    const playButton = root.querySelector('[data-play]');
+    const previousButton = root.querySelector('[data-previous]');
+    const nextButton = root.querySelector('[data-next]');
+    const count = root.querySelector('[data-count]');
+    const eventLabel = root.querySelector('[data-event]');
+    const items = root.querySelector('[data-items]');
+    const empty = root.querySelector('[data-empty]');
+    const cells = [...root.querySelectorAll('[data-cell]')];
+
+    root.querySelector('[data-pending-title]').textContent = words.collection;
+    root.querySelector('[data-ends]').textContent = words.ends;
+
+    const lastFrame = frames.length - 1;
+    let index = 0;
+    let playback = null;
+
+    function render() {
+      const frame = frames[index];
+      playButton.textContent = playback !== null ? '暂停' : index === lastFrame ? '重播' : '播放';
+      previousButton.disabled = index === 0;
+      nextButton.disabled = index === lastFrame;
+      count.textContent = `${index} / ${lastFrame}`;
+      eventLabel.textContent = frame.message;
+
+      cells.forEach((cell, cellIndex) => {
+        const value = number(frame.distances[cellIndex]);
+        const changed = frame.changed === cellIndex;
+        cell.textContent = changed ? `(${value})` : value;
+        cell.toggleAttribute('data-current', frame.current === cellIndex);
+        cell.toggleAttribute('data-changed', changed);
+      });
+
+      items.replaceChildren(...frame.pending.map((position, itemIndex) => {
+        const item = document.createElement('li');
+        item.textContent = coordinate(position);
+        item.toggleAttribute('data-entry-added', frame.changed !== null && itemIndex === frame.pending.length - 1);
+        return item;
+      }));
+      items.hidden = frame.pending.length === 0;
+      empty.hidden = frame.pending.length !== 0;
+    }
+
+    function stopPlayback() {
+      if (playback !== null) window.clearInterval(playback);
+      playback = null;
+    }
+
+    function step(offset) {
+      stopPlayback();
+      index = Math.min(lastFrame, Math.max(0, index + offset));
+      render();
+    }
+
+    playButton.addEventListener('click', () => {
+      if (playback !== null) {
+        stopPlayback();
+        render();
+        return;
+      }
+
+      if (index === lastFrame) index = 0;
+      playback = window.setInterval(() => {
+        index++;
+        if (index === lastFrame) stopPlayback();
+        render();
+      }, 850);
+      render();
+    });
+    previousButton.addEventListener('click', () => step(-1));
+    nextButton.addEventListener('click', () => step(1));
+
+    render();
+  })();
+</script>
+</body>
+</html>
