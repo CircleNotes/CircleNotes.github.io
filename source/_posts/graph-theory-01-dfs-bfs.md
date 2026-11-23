@@ -43,13 +43,13 @@ excerpt: 从两个水格出发，给地图上每个地块填上到最近水格�
 跟着动画看 `(2, 1)`。从左侧水格出发，向右到 `(1, 1)`，再向下到 `(2, 1)`，一共走两步。
 
 <style>
-.graph-search-demo { display: block; width: 100%; height: 355px; border: 0; }
-@media (max-width: 720px) { .graph-search-demo { height: 510px; } }
+.graph-search-demo { display: block; width: 100%; height: 400px; border: 0; }
+@media (max-width: 720px) { .graph-search-demo { height: 560px; } }
 </style>
 
-<iframe class="graph-search-demo" src="/graph-theory-01-animations.html?mode=bfs" title="广度优先搜索与队列动画" loading="lazy"></iframe>
+<iframe class="graph-search-demo" src="/graph-theory-01-animations.html?mode=bfs&amp;rev=content-height" title="广度优先搜索与队列动画" loading="lazy"></iframe>
 
-[单独打开 BFS 动画](/graph-theory-01-animations.html?mode=bfs)
+[单独打开 BFS 动画](/graph-theory-01-animations.html?mode=bfs&rev=content-height)
 
 ## 三、沿一条分支先走，距离填大了怎么办？
 
@@ -61,9 +61,9 @@ excerpt: 从两个水格出发，给地图上每个地块填上到最近水格�
 
 这样得到的每个有限距离都对应某条实际走过的路线，所以至少等于最短距离。每次改写都让已有距离严格变小，有限网格上的改写最终会停下来。栈清空时，每个可达格子用自己的最新距离检查过邻居，因此每条可达边 `u → v` 都满足 `dis[v] ≤ dis[u] + 1`。沿着一条最短路径逐边应用这个条件，终点的记录值最多等于路径长度。这两个方向的约束合起来，结果就是最短距离。
 
-<iframe class="graph-search-demo" src="/graph-theory-01-animations.html?mode=dfs" title="深度优先搜索与栈动画" loading="lazy"></iframe>
+<iframe class="graph-search-demo" src="/graph-theory-01-animations.html?mode=dfs&amp;rev=content-height" title="深度优先搜索与栈动画" loading="lazy"></iframe>
 
-[单独打开 DFS 动画](/graph-theory-01-animations.html?mode=dfs)
+[单独打开 DFS 动画](/graph-theory-01-animations.html?mode=dfs&rev=content-height)
 
 ## 四、Unity 工程中的 C# 实现
 
